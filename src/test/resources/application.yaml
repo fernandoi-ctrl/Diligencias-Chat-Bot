@@ -1,0 +1,40 @@
+# Configuracion SOLO de tests. Sustituye a la de src/main/resources para que
+# 'mvnw test' no necesite Supabase, ni token de WhatsApp, ni Ollama corriendo.
+
+spring:
+  datasource:
+    # H2 en memoria hablando PostgreSQL: las entidades se crean igual que en Supabase.
+    url: jdbc:h2:mem:legalbot;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      # En produccion es 'validate' (esquema creado con el SQL de db/migration);
+      # en tests se generan las tablas a partir de las entidades.
+      ddl-auto: create-drop
+    # Hibernate detecta el dialecto de H2 solo; declararlo dispara un warning.
+    open-in-view: false
+  ai:
+    openai:
+      base-url: http://localhost:11434/v1
+      api-key: ollama
+      chat:
+        options:
+          model: llama3.1:latest
+
+telegram:
+  bot:
+    enabled: false
+    token: token-de-prueba
+
+whatsapp:
+  access-token: token-de-prueba
+  phone-number-id: "000000000000000"
+  verify-token: verify-de-prueba
+  api-url: https://graph.facebook.com/v21.0
+  enabled: true
+
+logging:
+  level:
+    com.legal.bot: INFO

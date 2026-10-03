@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: legal-whatsapp-bot
+  datasource:
+    url: ${SUPABASE_DB_URL}
+    username: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  ai:
+    openai:
+      base-url: http://localhost:11434/v1
+      api-key: ollama
+      chat:
+        options:
+          model: llama3.1:latest
+          temperature: 0.3
+
+whatsapp:
+  # Con ':' al final el valor por defecto es cadena vacia. Asi, si falta la variable de
+  # entorno, la app ARRANCA y WhatsAppService lo dice con un log claro
+  # ("falta WHATSAPP_ACCESS_TOKEN..."). Sin el default, Spring falla al resolver el
+  # placeholder y la app no llega a levantar: no hay logs de nada y parece que el
+  # webhook no recibe, cuando en realidad no hay servidor escuchando.
+  access-token: ${WHATSAPP_ACCESS_TOKEN}
+  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID}
+  verify-token: ${WHATSAPP_VERIFY_TOKEN}
+  api-url: https://graph.facebook.com/v21.0
+  numeros-permitidos:
+      - "5214494902629"
+      - "5214494641482"
+      - "5214492227066"
+      - "5214495537151"
+      - "5214498866339"
+      - "5214493894545"
+
+chat:
+  conversacion:
+    horas-expiracion: 24
+    mensajes-contexto: 20
+
+logging:
+  level:
+    com.legal.bot: DEBUG
+    # Deja ver el POST que entra y la peticion que sale hacia Graph API. Son las dos
+    # cosas que hay que mirar cuando "el bot no responde"; quitalo cuando ya funcione.
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG

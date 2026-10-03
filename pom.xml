@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.1</version>
+		<relativePath/> <!-- se resuelve desde el repositorio remoto -->
+	</parent>
+
+	<groupId>com.legal</groupId>
+	<artifactId>diligencias</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>diligencias</name>
+	<description>Bot de Telegram para consultas legales con IA local (Ollama) via Spring AI</description>
+
+	<properties>
+		<!-- Spring Boot 4.1 exige Java 17 como minimo. El JDK instalado en este equipo
+		     es 17, por eso el target es 17. Para produccion con Java 21: instala un
+		     JDK 21 y cambia unicamente esta linea a <java.version>21</java.version>. -->
+		<java.version>17</java.version>
+		<spring-ai.version>2.0.1</spring-ai.version>
+		<!-- Linea moderna de rubenlagus/TelegramBots (Bot API actual).
+		     OJO: org.telegram:telegrambots-spring-boot-starter quedo congelado en
+		     6.9.7.1 (Bot API 6.9) y su autoconfiguracion no es compatible con
+		     Spring Boot 4.x, por eso registramos el bot a mano en TelegramBotConfig. -->
+		<telegrambots.version>10.3.0</telegrambots.version>
+	</properties>
+
+	<dependencies>
+		<!-- Web: expone el puerto 8080 (health/estado). El long polling NO necesita
+		     servidor web, pero mantenemos el puerto tal como pide la especificacion. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- WebFlux: solo por el WebClient con el que llamamos a la Cloud API de
+		     WhatsApp. El servidor web sigue siendo el de spring-boot-starter-web
+		     (Tomcat), porque el webhook es un controlador MVC normal. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<!-- Persistencia de clientes, conversaciones y mensajes en Supabase -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Spring AI: cliente con API compatible OpenAI, apuntado a Ollama (/v1) -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
+		</dependency>
+
+		<!-- Telegram: long polling + cliente HTTP para responder -->
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-longpolling</artifactId>
+			<version>${telegrambots.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-client</artifactId>
+			<version>${telegrambots.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Spring Boot 4 saco las anotaciones de "slice" (@WebMvcTest y compania) de
+		     spring-boot-starter-test a modulos aparte; esta es la de Spring MVC. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Base de datos en memoria SOLO para tests: asi 'mvnw test' no necesita
+		     credenciales de Supabase ni conexion a internet. -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
