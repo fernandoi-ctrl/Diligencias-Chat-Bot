@@ -16,12 +16,11 @@ spring:
   ai:
     openai:
       base-url: http://localhost:11434/v1
-      api-key: ollama
+      api-key: ${GROQ_API_KEY} 
       chat:
         options:
-          model: llama3.1:latest
+          model: hoodarunner/offline-agent:latest
           temperature: 0.3
-
 whatsapp:
   # Con ':' al final el valor por defecto es cadena vacia. Asi, si falta la variable de
   # entorno, la app ARRANCA y WhatsAppService lo dice con un log claro

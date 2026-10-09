@@ -15,23 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Webhook de la WhatsApp Cloud API.
- *
- * <p>Meta usa el mismo path para dos cosas distintas:</p>
- * <ul>
- *   <li><b>GET</b>: verificacion. Al dar de alta la URL en el panel de Meta, llega un GET
- *       con {@code hub.verify_token}; si coincide con el nuestro hay que devolver
- *       {@code hub.challenge} en texto plano.</li>
- *   <li><b>POST</b>: mensajes y acuses de entrega.</li>
- * </ul>
- *
- * <p>El POST responde <b>200 de inmediato</b> y delega el trabajo real en
- * {@link WhatsAppMessageHandler}, que corre en otro hilo. Es un requisito de Meta: si no
- * contestamos rapido, reintenta el envio y el cliente recibiria respuestas repetidas.
- * Tambien se devuelve 200 ante un cuerpo inesperado, porque un error hace que Meta
- * reintente y, si se repite, que desactive la suscripcion del webhook.</p>
- */
+
 @RestController
 @RequestMapping("/webhook")
 public class WebhookController {
