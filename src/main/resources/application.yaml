@@ -9,6 +9,13 @@ spring:
     username: ${SUPABASE_DB_USER}
     password: ${SUPABASE_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      data-source-properties:
+        ssl: true
+        sslmode: require
+        sslcert: ""
+        sslkey: ""
+        sslrootcert: ""
   jpa:
     hibernate:
       ddl-auto: validate
