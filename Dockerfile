@@ -8,5 +8,9 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-Djdk.tls.client.protocols=TLSv1.3", "-jar", "app.jar"]
+# Crear el directorio para el certificado SSL
+RUN mkdir -p /app/certs
+# El certificado debe estar en src/main/resources para ser copiado
+COPY src/main/resources/prod-ca-2021.crt /app/certs/prod-ca-2021.crt
+
+ENTRYPOINT ["java", "-Djdk.tls.client.protocols=TLSv1.2", "-jar", "app.jar"]
