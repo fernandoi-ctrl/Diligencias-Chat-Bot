@@ -31,13 +31,6 @@ whatsapp:
   phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID}
   verify-token: ${WHATSAPP_VERIFY_TOKEN}
   api-url: https://graph.facebook.com/v21.0
-  numeros-permitidos:
-      - "5214494902629"
-      - "5214494641482"
-      - "5214492227066"
-      - "5214495537151"
-      - "5214498866339"
-      - "5214493894545"
 
 chat:
   conversacion:
