@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -15,21 +15,17 @@ spring:
     open-in-view: false
   ai:
     openai:
-      base-url: http://localhost:11434/v1
-      api-key: ${GROQ_API_KEY} 
+      base-url: https://api.groq.com/openai/v1
+      api-key: ${GROQ_API_KEY}
       chat:
         options:
-          model: hoodarunner/offline-agent:latest
+          model: openai/gpt-oss-120b
           temperature: 0.3
+
 whatsapp:
-  # Con ':' al final el valor por defecto es cadena vacia. Asi, si falta la variable de
-  # entorno, la app ARRANCA y WhatsAppService lo dice con un log claro
-  # ("falta WHATSAPP_ACCESS_TOKEN..."). Sin el default, Spring falla al resolver el
-  # placeholder y la app no llega a levantar: no hay logs de nada y parece que el
-  # webhook no recibe, cuando en realidad no hay servidor escuchando.
-  access-token: ${WHATSAPP_ACCESS_TOKEN}
-  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID}
-  verify-token: ${WHATSAPP_VERIFY_TOKEN}
+  access-token: ${WHATSAPP_ACCESS_TOKEN:}
+  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+  verify-token: ${WHATSAPP_VERIFY_TOKEN:}
   api-url: https://graph.facebook.com/v21.0
 
 chat:
@@ -40,7 +36,5 @@ chat:
 logging:
   level:
     com.legal.bot: DEBUG
-    # Deja ver el POST que entra y la peticion que sale hacia Graph API. Son las dos
-    # cosas que hay que mirar cuando "el bot no responde"; quitalo cuando ya funcione.
     org.springframework.web.servlet.DispatcherServlet: DEBUG
     org.springframework.web.reactive.function.client: DEBUG
