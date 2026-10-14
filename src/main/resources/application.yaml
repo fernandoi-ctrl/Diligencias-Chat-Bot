@@ -30,9 +30,9 @@ spring:
           temperature: 0.3
 
 whatsapp:
-  access-token: ${WHATSAPP_ACCESS_TOKEN:}
-  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
-  verify-token: ${WHATSAPP_VERIFY_TOKEN:}
+  access-token: ${WHATSAPP_ACCESS_TOKEN}
+  phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID}
+  verify-token: ${WHATSAPP_VERIFY_TOKEN}
   api-url: https://graph.facebook.com/v21.0
 
 chat:
