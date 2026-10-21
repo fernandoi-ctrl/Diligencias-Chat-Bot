@@ -22,4 +22,5 @@ public interface MensajeRepository extends JpaRepository<Mensaje, Long> {
     """)
     List<Mensaje> findUltimosPorConversacion(@Param("conversacionId") Long conversacionId,
                                              Pageable pageable);
+    List<Mensaje> findByConversacionIdOrderByFechaCreacionAsc(Long id);
 }

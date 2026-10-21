@@ -9,7 +9,6 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "whatsapp")
 public class WhatsAppProperties {
-
     private String accessToken;
     private String phoneNumberId;
     private String verifyToken;
