@@ -11,6 +11,7 @@ import com.legal.bot.service.WhatsAppService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,12 +34,6 @@ public class AdminController {
         this.mensajeRepo = mensajeRepo;
         this.conversationService = conversationService;
         this.whatsAppService = whatsAppService;
-    }
-
-    // 1. Obtener todos los clientes (para la lista de chats)
-    @GetMapping("/clientes")
-    public List<Cliente> obtenerClientes() {
-        return clienteRepo.findAll();
     }
 
     // 2. Obtener los mensajes de un cliente
@@ -91,4 +86,17 @@ public class AdminController {
 
         return ResponseEntity.ok(Map.of("status", "enviado"));
     }
+    // 1. Obtener todos los clientes (para la lista de chats)
+    @GetMapping("/clientes")
+    public List<Map<String, Object>> obtenerClientes() {
+        return clienteRepo.findAll().stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", c.getId());
+            map.put("telefono", c.getTelefono());
+            map.put("nombre", c.getNombre() != null ? c.getNombre() : "Desconocido");
+            map.put("modoIaActivo", c.getModoIaActivo());
+            return map;
+        }).toList();
+    }
+
 }
