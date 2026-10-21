@@ -37,19 +37,19 @@ public class AdminController {
     }
 
     // 2. Obtener los mensajes de un cliente
-    @GetMapping("/clientes/{telefono}/mensajes")
-    public ResponseEntity<List<Mensaje>> obtenerMensajes(@PathVariable String telefono) {
-        Optional<Cliente> cliente = clienteRepo.findByTelefono(telefono);
-        if (cliente.isEmpty()) return ResponseEntity.notFound().build();
-
-        // Buscamos la conversación activa o la última
-        Optional<Conversacion> conv = conversacionRepo.findFirstByClienteIdAndActivaTrueOrderByFechaInicioDesc(cliente.get().getId());
-        
-        if (conv.isEmpty()) return ResponseEntity.ok(List.of()); // Sin conversaciones
-
-        List<Mensaje> mensajes = mensajeRepo.findByConversacionIdOrderByFechaCreacionAsc(conv.get().getId());
-        return ResponseEntity.ok(mensajes);
-    }
+//    @GetMapping("/clientes/{telefono}/mensajes")
+//    public ResponseEntity<List<Mensaje>> obtenerMensajes(@PathVariable String telefono) {
+//        Optional<Cliente> cliente = clienteRepo.findByTelefono(telefono);
+//        if (cliente.isEmpty()) return ResponseEntity.notFound().build();
+//
+//        // Buscamos la conversación activa o la última
+//        Optional<Conversacion> conv = conversacionRepo.findFirstByClienteIdAndActivaTrueOrderByFechaInicioDesc(cliente.get().getId());
+//        
+//        if (conv.isEmpty()) return ResponseEntity.ok(List.of()); // Sin conversaciones
+//
+//        List<Mensaje> mensajes = mensajeRepo.findByConversacionIdOrderByFechaCreacionAsc(conv.get().getId());
+//        return ResponseEntity.ok(mensajes);
+//    }
 
     // 3. Encender / Apagar Modo IA
     @PatchMapping("/clientes/{telefono}/modo-ia")
@@ -85,6 +85,31 @@ public class AdminController {
         conversationService.guardarSaliente(conv, texto, false, null); // generadoPorIa = false
 
         return ResponseEntity.ok(Map.of("status", "enviado"));
+    }
+    // 2. Obtener los mensajes de un cliente
+    @GetMapping("/clientes/{telefono}/mensajes")
+    public ResponseEntity<List<Map<String, Object>>> obtenerMensajes(@PathVariable String telefono) {
+        Optional<Cliente> cliente = clienteRepo.findByTelefono(telefono);
+        if (cliente.isEmpty()) return ResponseEntity.ok(List.of());
+
+        Optional<Conversacion> conv = conversacionRepo.findFirstByClienteIdAndActivaTrueOrderByFechaInicioDesc(cliente.get().getId());
+        
+        if (conv.isEmpty()) return ResponseEntity.ok(List.of());
+
+        List<Mensaje> mensajes = mensajeRepo.findByConversacionIdOrderByFechaCreacionAsc(conv.get().getId());
+        
+        // Convertimos a un Map para evitar el bucle infinito y datos sensibles
+        List<Map<String, Object>> response = mensajes.stream().map(m -> {
+            Map<String,Object> map = new HashMap<>();
+                map.put("id", m.getId());
+                map.put("rol", m.getRol());
+                map.put("contenido", m.getContenido());
+                map.put("fecha", m.getFechaCreacion() != null ? m.getFechaCreacion().toString() : "");
+        return map;    
+        }
+        ).toList();
+
+        return ResponseEntity.ok(response);
     }
     // 1. Obtener todos los clientes (para la lista de chats)
     @GetMapping("/clientes")
