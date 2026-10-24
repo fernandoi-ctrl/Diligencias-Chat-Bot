@@ -37,7 +37,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.withUsername("admin")
-                .password("{noop}admin123") // {noop} significa "sin encriptar" (ideal para pruebas rápidas)
+                .password("{noop}diligencias1488") // {noop} significa "sin encriptar" (ideal para pruebas rápidas)
                 .roles("ADMIN")
                 .build();
                 

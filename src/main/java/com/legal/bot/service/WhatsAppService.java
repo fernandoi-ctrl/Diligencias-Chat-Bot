@@ -21,7 +21,7 @@ import java.util.Optional;
  * generico, con lo que el bean configurado quedaba sin usar y se perdian los timeouts.</p>
  */
 @Service
-public class WhatsAppService {
+public class WhatsAppService{
 
     private static final Logger log = LoggerFactory.getLogger(WhatsAppService.class);
 

@@ -8,6 +8,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
 
 import com.legal.bot.model.entity.Conversacion;
@@ -23,6 +24,17 @@ public class LegalAIService {
 
 	private static final Logger log = LoggerFactory.getLogger(LegalAIService.class);
 
+	private final ChatClient chatClient;
+    private final CitaTools citaTools; // <-- Inyectamos las herramientas
+
+    public LegalAIService(ChatModel chatModel, CitaTools citaTools,ConversationService conversationService) {
+        this.citaTools = citaTools;
+        this.chatClient = ChatClient.builder(chatModel)
+                .defaultSystem(SYSTEM_PROMPT)
+                .build();
+        this.conversationService=conversationService;
+    }
+	
 	/** Respuesta de cortesia cuando Ollama no esta disponible o falla la generacion. */
 	private static final String RESPUESTA_FALLBACK = """
 			En este momento no puedo procesar tu consulta. Por favor intenta de nuevo en \
@@ -63,9 +75,13 @@ public class LegalAIService {
 			7. Se conciso: maximo 300 caracteres siempre que sea posible.
 			8. Tono profesional pero accesible, sin tecnicismos innecesarios.
 			9. No des una asesoria legal definitiva ni garantices resultados de un juicio.
+			INSTRUCCIONES PARA AGENDAR CITAS:
+1. Si el cliente pide agendar una cita, hablar con un abogado o una consulta, DEBES usar la herramienta 'agendarCita'.
+2. Antes de usar la herramienta, asegúrate de tener: el motivo de la consulta, la fecha/hora deseada y un resumen de su problema.
+3. Si el cliente no te da la fecha o el motivo, pregúntale amablemente antes de agendar.
+4. Una vez que tengas los datos, ejecuta la herramienta. No inventes que agendaste la cita sin usar la herramienta.
 			""";
 
-	private final ChatClient chatClient;
 
 	private final ConversationService conversationService;
 
@@ -73,12 +89,12 @@ public class LegalAIService {
 	 * Spring AI autoconfigura el {@code ChatClient.Builder}; aqui le fijamos el system
 	 * prompt para que aplique a todas las consultas.
 	 */
-	public LegalAIService(ChatClient.Builder chatClientBuilder, ConversationService conversationService) {
-		this.chatClient = chatClientBuilder
-				.defaultSystem(SYSTEM_PROMPT)
-				.build();
-		this.conversationService = conversationService;
-	}
+//	public LegalAIService(ChatClient.Builder chatClientBuilder, ConversationService conversationService) {
+//		this.chatClient = chatClientBuilder
+//				.defaultSystem(SYSTEM_PROMPT)
+//				.build();
+//		this.conversationService = conversationService;
+//	}
 
 	/**
 	 * Envia la consulta del usuario al modelo y devuelve la respuesta generada.
