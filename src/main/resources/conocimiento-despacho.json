@@ -1,26 +1,26 @@
 {
   "despacho": {
-    "nombre": "🦉 Despacho Legal Aguascalientes",
+    "nombre": "🦉 Gestoría de Diligencias Aguascalientes",
     "ubicacion": "Aguascalientes, México",
-    "horario": "Lunes a Viernes 9:00 AM - 7:00 PM"
+    "horario": "Lunes a Viernes 9:00 AM - 7:00 PM",
+    "modalidad": "Atención por videollamada (Zoom o Whatsapp)"
   },
   "costos_diligencias": {
     "ciudad_aguascalientes": 1000,
     "municipios_aguascalientes": 1300,
     "moneda": "MXN"
   },
-  "materias": [
-    "Civil: contratos, arrendamientos, cobros, daños y perjuicios",
-    "Familiar: divorcios, pensión alimenticia, custodia, patria potestad",
-    "Laboral: despidos injustificados, liquidaciones",
-    "Mercantil: títulos de crédito, pagarés, cheques",
-    "Penal: defensa penal, querellas, denuncias",
-    "Administrativa: amparos, recursos administrativos"
+  "servicios": [
+    "Notificaciones y citatorios",
+    "Emplazamientos",
+    "RequERimientos de documentos",
+    "Fe de hechos",
+    "Trámites administrativos locales"
   ],
   "menu_opciones": [
     {"opcion": "1", "texto": "Consultar costos de diligencias"},
-    {"opcion": "2", "texto": "Consultar materias que llevamos"},
+    {"opcion": "2", "texto": "Consultar los servicios que realizamos"},
     {"opcion": "3", "texto": "Horarios de atención"},
-    {"opcion": "4", "texto": "Hablar con un abogado"}
+    {"opcion": "4", "texto": "Agendar una cita por Zoom o Whatsapp"}
   ]
 }
