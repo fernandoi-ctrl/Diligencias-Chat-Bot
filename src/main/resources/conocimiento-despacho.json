@@ -22,5 +22,8 @@
     {"opcion": "2", "texto": "Consultar los servicios que realizamos"},
     {"opcion": "3", "texto": "Horarios de atención"},
     {"opcion": "4", "texto": "Agendar una cita por Zoom o Whatsapp"}
+  ],
+  "numero_de_nuestros_abogados":[
+     {"Martha Evelia":"5214491157917"}
   ]
 }
