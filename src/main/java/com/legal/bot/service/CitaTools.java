@@ -53,28 +53,32 @@ import org.springframework.stereotype.Service;
 @Service
 public class CitaTools {
 
-    private final WhatsAppService whatsAppService; // Para notificarte a ti
+    private final WhatsAppService whatsAppService; 
 
     public CitaTools(WhatsAppService whatsAppService) {
         this.whatsAppService = whatsAppService;
     }
 
-    @Tool(description = "Agenda una cita por Zoom para un servicio de diligencias.")
+    @Tool(description = "Agenda una cita por Zoom. Requiere nombre, fecha/hora, tipo de diligencia y ubicación.")
     public String agendarCita(
             @ToolParam(description = "Nombre completo del cliente") String nombre,
-            @ToolParam(description = "Fecha y hora de la cita por Zoom") String fechaHora,
-            @ToolParam(description = "Qué diligencia necesita y en qué zona (ciudad o municipio)") String resumen) {
+            @ToolParam(description = "Fecha y hora exacta (ej. 31 de octubre a las 4pm)") String fechaHora,
+            @ToolParam(description = "Tipo de diligencia (notificación, fe de hechos, etc)") String tipoDiligencia,
+            @ToolParam(description = "Ubicación de la diligencia (dentro de la ciudad o municipio)") String ubicacion) {
         
-        // Imprimimos en Render para monitoreo
         System.out.println("====== NUEVA CITA DE DILIGENCIA ======");
         System.out.println("Cliente: " + nombre);
         System.out.println("Fecha: " + fechaHora);
-        System.out.println("Detalles: " + resumen);
+        System.out.println("Diligencia: " + tipoDiligencia);
+        System.out.println("Ubicación: " + ubicacion);
         System.out.println("======================================");
 
-        // Opcional: Notificarte a tu WhatsApp personal (pon tu número real)
-        // whatsAppService.enviarTexto("5214490000000", "Nueva Cita: " + nombre + " el " + fechaHora + ". Diligencia: " + resumen);
-
-        return "Cita agendada con éxito para " + nombre + " el día " + fechaHora + ". Se ha enviado la confirmación.";
+        // Aquí puedes notificarte a ti mismo (Cambia el número por el tuyo)
+        // whatsAppService.enviarTexto("5214490000000", "Nueva Cita de " + nombre + ". Diligencia: " + tipoDiligencia + " el " + fechaHora);
+     // Dentro de agendarCita:
+    	whatsAppService.enviarTexto("5214491157917", "Nueva Cita de " + nombre + ". Diligencia: " + tipoDiligencia + " el " + fechaHora);
+   
+        
+        return "La cita ha sido agendada con éxito para el día " + fechaHora + " por Zoom. Se ha enviado la confirmación.";
     }
 }
