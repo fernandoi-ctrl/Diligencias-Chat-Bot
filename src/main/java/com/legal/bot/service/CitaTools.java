@@ -42,11 +42,11 @@ public class CitaTools {
             );
             whatsAppService.enviarTexto("5214491157917", mensajeNotificacion);
             log.info("Notificación enviada al administrador con éxito.");
-        } catch (Exception e) {
+        } catch (Exception e) {   
             log.error("Fallo al enviar notificación por WhatsApp al admin: {}", e.getMessage());
             // El error se ignora para que el bot pueda responderle al cliente.
         }
         
         return "La cita ha sido agendada con éxito para el día " + fechaHora + " por Zoom. Se ha enviado la confirmación.";
     }
-}
+} 

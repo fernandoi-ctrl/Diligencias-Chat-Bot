@@ -14,80 +14,71 @@ import org.springframework.stereotype.Service;
 import com.legal.bot.model.entity.Conversacion;
 
 /**
- * Procesa las consultas legales con el modelo local de Ollama a traves de Spring AI.
+ * Procesa las consultas con el modelo de IA a traves de Spring AI.
  *
  * <p>Todo el conocimiento del despacho vive en el SYSTEM PROMPT, de modo que el modelo
  * responde con datos fijos (costos, materias, horario) sin inventarlos.</p>
+ *
+ * <p>Las herramientas (tool calling) se registran en el ChatClient con
+ * {@code defaultTools(...)}; sin ese registro el modelo no puede invocar
+ * {@code agendarCita}.</p>
  */
 @Service
 public class LegalAIService {
 
 	private static final Logger log = LoggerFactory.getLogger(LegalAIService.class);
 
-	private final ChatClient chatClient;
-    private final CitaTools citaTools; // <-- Inyectamos las herramientas
-
-    public LegalAIService(ChatModel chatModel, CitaTools citaTools,ConversationService conversationService) {
-        this.citaTools = citaTools;
-        this.chatClient = ChatClient.builder(chatModel)
-                .defaultSystem(SYSTEM_PROMPT)
-                .build();
-        this.conversationService=conversationService;
-    }
-	
-	/** Respuesta de cortesia cuando Ollama no esta disponible o falla la generacion. */
+	/** Respuesta de cortesia cuando el modelo no esta disponible o falla la generacion. */
 	private static final String RESPUESTA_FALLBACK = """
 			En este momento no puedo procesar tu consulta. Por favor intenta de nuevo en \
 			unos minutos o agenda una consulta con uno de nuestros abogados.""";
 
-    private static final String SYSTEM_PROMPT = """
-            Eres el asistente virtual de la Gestoría de Diligencias Aguascalientes.
-            Atendemos únicamente servicios de diligencias y trámites, NO llevamos juicios ni casos legales completos.
+	private static final String SYSTEM_PROMPT = """
+			Eres el asistente virtual de la Gestoría de Diligencias Aguascalientes.
+			Atendemos únicamente servicios de diligencias y trámites, NO llevamos juicios ni casos legales completos.
 
-            DATOS DEL SERVICIO
-            - Nombre: Gestoría de Diligencias Aguascalientes
-            - Ubicación: Aguascalientes, México
-            - Horario de atención: Lunes a Viernes, 9:00 AM a 7:00 PM
-            - Modalidad: Las citas son por videollamada (Zoom) para coordinar el servicio.
+			DATOS DEL SERVICIO
+			- Nombre: Gestoría de Diligencias Aguascalientes
+			- Ubicación: Aguascalientes, México
+			- Horario de atención: Lunes a Viernes, 9:00 AM a 7:00 PM
+			- Modalidad: Las citas son por videollamada (Zoom) para coordinar el servicio.
 
-            SERVICIOS QUE SÍ REALIZAMOS (DILIGENCIAS)
-            - Notificaciones, citatorios y emplazamientos.
-            - Requerimientos de documentos.
-            - Fe de hechos y trámites administrativos.
+			SERVICIOS QUE SÍ REALIZAMOS (DILIGENCIAS)
+			- Notificaciones, citatorios y emplazamientos.
+			- Requerimientos de documentos.
+			- Fe de hechos y trámites administrativos.
 
-            COSTOS DE DILIGENCIAS (cifras exactas, nunca las modifiques)
-            - Dentro de la ciudad de Aguascalientes: $1,000 MXN
-            - En municipios del estado de Aguascalientes: $1,300 MXN
-            Si el usuario pregunta por el costo y no aclara la ubicación, menciona ambas cifras.
+			COSTOS DE DILIGENCIAS (cifras exactas, nunca las modifiques)
+			- Dentro de la ciudad de Aguascalientes: $1,000 MXN
+			- En municipios del estado de Aguascalientes: $1,300 MXN
+			Si el usuario pregunta por el costo y no aclara la ubicación, menciona ambas cifras.
 
-            REGLAS DE RESPUESTA ESTRICTAS
-            1. Responde SIEMPRE en español, de forma breve y amable.
-            2. Si el usuario pide ayuda con un juicio, divorcio, pensión, demanda penal o cualquier caso legal completo, 
-               aclara amablemente que SOLO realizan diligencias y ofrécele agendar una cita por Zoom para explicarle si se puede apoyar con la entrega de documentos.
-            3. Da cantidades exactas de las diligencias según la ubicación.
-            4. NO inventes información ni des asesoría legal.
-            5. Si el usuario quiere contratar una diligencia o agendar una cita, debes usar la herramienta 'agendarCita'.
+			REGLAS DE RESPUESTA ESTRICTAS
+			1. Responde SIEMPRE en español, de forma breve y amable.
+			2. Si el usuario pide ayuda con un juicio, divorcio, pensión, demanda penal o cualquier caso legal completo, \
+			aclara amablemente que SOLO realizan diligencias y ofrécele agendar una cita por Zoom para explicarle si se puede apoyar con la entrega de documentos.
+			3. Da cantidades exactas de las diligencias según la ubicación.
+			4. NO inventes información ni des asesoría legal.
+			5. Si el usuario quiere contratar una diligencia o agendar una cita, debes usar la herramienta 'agendarCita'.
 
-            INSTRUCCIONES PARA AGENDAR CITAS (ZOOM)
-            1. Si el cliente pide agendar una cita o contratar una diligencia, DEBES usar la herramienta 'agendarCita'.
-            2. Antes de usar la herramienta, recopila: nombre del cliente, fecha/hora deseada y un resumen de qué diligencia necesita y en qué zona.
-            3. Si faltan datos, pregúntalos uno por uno amablemente.
-            4. Cuando tengas todos los datos, ejecuta la herramienta.
-            """;
+			INSTRUCCIONES PARA AGENDAR CITAS (ZOOM)
+			1. Si el cliente pide agendar una cita o contratar una diligencia, DEBES usar la herramienta 'agendarCita'.
+			2. Antes de usar la herramienta, recopila: nombre del cliente, fecha/hora deseada y un resumen de qué diligencia necesita y en qué zona.
+			3. Si faltan datos, pregúntalos uno por uno amablemente.
+			4. Cuando tengas todos los datos, ejecuta la herramienta.
+			""";
 
-
+	private final ChatClient chatClient;
 	private final ConversationService conversationService;
 
-	/**
-	 * Spring AI autoconfigura el {@code ChatClient.Builder}; aqui le fijamos el system
-	 * prompt para que aplique a todas las consultas.
-	 */
-//	public LegalAIService(ChatClient.Builder chatClientBuilder, ConversationService conversationService) {
-//		this.chatClient = chatClientBuilder
-//				.defaultSystem(SYSTEM_PROMPT)
-//				.build();
-//		this.conversationService = conversationService;
-//	}
+	public LegalAIService(ChatModel chatModel, CitaTools citaTools,
+			ConversationService conversationService) {
+		this.conversationService = conversationService;
+		this.chatClient = ChatClient.builder(chatModel)
+				.defaultSystem(SYSTEM_PROMPT)
+				.defaultTools(citaTools) // <-- ESTA LINEA ES LA CORRECCION: registra agendarCita
+				.build();
+	}
 
 	/**
 	 * Envia la consulta del usuario al modelo y devuelve la respuesta generada.
@@ -111,18 +102,14 @@ public class LegalAIService {
 			return respuesta.trim();
 		}
 		catch (Exception ex) {
-			// Causa mas comun: Ollama apagado en localhost:11434 o modelo no descargado.
 			log.error("Error al consultar el modelo de IA: {}", ex.getMessage(), ex);
 			return RESPUESTA_FALLBACK;
 		}
 	}
+
 	/**
 	 * Firma principal, la que usa el handler de WhatsApp: responde teniendo en cuenta los
 	 * ultimos mensajes de la conversacion.
-	 *
-	 * <p>Antes era un stub que devolvia cadena vacia. El handler interpreta la cadena
-	 * vacia como "el modelo no supo que contestar" y no envia nada, asi que el bot
-	 * guardaba el mensaje del cliente y se quedaba callado en toda consulta abierta.</p>
 	 */
 	public String responder(Conversacion conversacion, String texto) {
 		if (texto == null || texto.isBlank()) {
