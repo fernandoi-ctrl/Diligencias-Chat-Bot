@@ -126,14 +126,14 @@ public class WhatsAppMessageHandler {
         whatsAppService.marcarComoLeido(mensaje.id());
 
         // 5. Respuestas fijas (saludo / menú / opción numérica).
-        Optional<Respuesta> fija = respuestaFija(texto);
+        Optional<Respuesta> fija = respuestaFija(mensaje);
         if (fija.isPresent()) {
             responder(conversacion, telefono, fija.get().texto(), fija.get().generadoPorIa());
             return;
         }
 
         // 6. Consulta abierta: la responde la IA local.
-        String respuestaIA = legalAIService.responder(conversacion, texto);
+        String respuestaIA = legalAIService.responder(conversacion, texto,telefono);
 
         // Si el LLM no supo qué contestar, no enviamos nada.
         if (respuestaIA == null || respuestaIA.isBlank()
@@ -145,31 +145,32 @@ public class WhatsAppMessageHandler {
         responder(conversacion, telefono, respuestaIA, true);
     }
 
-    private Optional<Respuesta> respuestaFija(String texto) {
-        String normalizado = texto.toLowerCase(Locale.ROOT).trim();
+    private Optional<Respuesta> respuestaFija(WhatsAppMessage texto) {
+        String normalizado = texto.contenido().toLowerCase(Locale.ROOT).trim();
 
         if (SALUDOS.contains(normalizado)) {
             return Optional.of(Respuesta.fija(knowledgeService.mensajeBienvenida()));
         }
 
-        if (normalizado.length() == 1 && Character.isDigit(normalizado.charAt(0))) {
-            String opcion = knowledgeService.textoDeOpcion(normalizado);
-            if (opcion == null) {
-                return Optional.of(Respuesta.fija(knowledgeService.mensajeBienvenida()));
-            }
-            if ("4".equals(normalizado)) {
-                // Opción "Hablar con un abogado": solo aviso, sin silenciar el bot.
-                return Optional.of(Respuesta.fija(
-                        PASO_A_ABOGADO.formatted(knowledgeService.horario())));
-            }
-            // Las demás opciones se resuelven con la IA, usando el tema como prompt.
-            String respuesta = legalAIService.responderPorTema(opcion);
-            if (respuesta == null || respuesta.isBlank()
-                    || MARCADOR_NO_RESPONDER.equalsIgnoreCase(respuesta.trim())) {
-                return Optional.empty();
-            }
-            return Optional.of(Respuesta.deIa(respuesta));
-        }
+		if (normalizado.length() == 1 && Character.isDigit(normalizado.charAt(0))) {
+			String opcion = knowledgeService.textoDeOpcion(normalizado);
+			if (opcion == null) {
+				return Optional.of(Respuesta.fija(knowledgeService.mensajeBienvenida()));
+			}
+			
+			if ("4".equals(normalizado)) {
+				// En lugar del mensaje fijo, forzamos a la IA a usar la herramienta
+				String respuesta = legalAIService.responder("Hola, quiero agendar una cita por Zoom para una diligencia.", texto.from());
+				return Optional.of(Respuesta.deIa(respuesta));
+			}
+			
+			// Las demás opciones se resuelven con la IA, usando el tema como prompt.
+			String respuesta = legalAIService.responderPorTema(opcion, texto.from()); // <-- Asegúrate de pasarle telefono aquí
+			if (respuesta == null || respuesta.isBlank() || MARCADOR_NO_RESPONDER.equalsIgnoreCase(respuesta.trim())) {
+				return Optional.empty();
+			}
+			return Optional.of(Respuesta.deIa(respuesta));
+		}
 
         return Optional.empty();
     }

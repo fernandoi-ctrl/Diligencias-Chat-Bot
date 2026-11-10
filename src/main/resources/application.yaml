@@ -26,7 +26,7 @@ spring:
       api-key: ${GROQ_API_KEY}
       chat:
         options:
-          model: openai/gpt-oss-120b
+          model: qwen/qwen3.8-27b # <-- CAMBIA ESTO (o usa llama-3.3-70b-versatile si está disponible)
           temperature: 0.3
 
 whatsapp:

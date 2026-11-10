@@ -13,22 +13,11 @@ import org.springframework.stereotype.Service;
 
 import com.legal.bot.model.entity.Conversacion;
 
-/**
- * Procesa las consultas con el modelo de IA a traves de Spring AI.
- *
- * <p>Todo el conocimiento del despacho vive en el SYSTEM PROMPT, de modo que el modelo
- * responde con datos fijos (costos, materias, horario) sin inventarlos.</p>
- *
- * <p>Las herramientas (tool calling) se registran en el ChatClient con
- * {@code defaultTools(...)}; sin ese registro el modelo no puede invocar
- * {@code agendarCita}.</p>
- */
 @Service
 public class LegalAIService {
 
 	private static final Logger log = LoggerFactory.getLogger(LegalAIService.class);
 
-	/** Respuesta de cortesia cuando el modelo no esta disponible o falla la generacion. */
 	private static final String RESPUESTA_FALLBACK = """
 			En este momento no puedo procesar tu consulta. Por favor intenta de nuevo en \
 			unos minutos o agenda una consulta con uno de nuestros abogados.""";
@@ -56,14 +45,14 @@ public class LegalAIService {
 			REGLAS DE RESPUESTA ESTRICTAS
 			1. Responde SIEMPRE en español, de forma breve y amable.
 			2. Si el usuario pide ayuda con un juicio, divorcio, pensión, demanda penal o cualquier caso legal completo, \
-			aclara amablemente que SOLO realizan diligencias y ofrécele agendar una cita por Zoom para explicarle si se puede apoyar con la entrega de documentos.
+			aclara amablemente que SOLO realizan diligencias y ofrécele agendar una cita por Zoom.
 			3. Da cantidades exactas de las diligencias según la ubicación.
 			4. NO inventes información ni des asesoría legal.
 			5. Si el usuario quiere contratar una diligencia o agendar una cita, debes usar la herramienta 'agendarCita'.
 
 			INSTRUCCIONES PARA AGENDAR CITAS (ZOOM)
 			1. Si el cliente pide agendar una cita o contratar una diligencia, DEBES usar la herramienta 'agendarCita'.
-			2. Antes de usar la herramienta, recopila: nombre del cliente, fecha/hora deseada y un resumen de qué diligencia necesita y en qué zona.
+			2. Antes de usar la herramienta, recopila: nombre del cliente, fecha/hora deseada, tipo de diligencia y ubicación.
 			3. Si faltan datos, pregúntalos uno por uno amablemente.
 			4. Cuando tengas todos los datos, ejecuta la herramienta.
 			""";
@@ -71,109 +60,99 @@ public class LegalAIService {
 	private final ChatClient chatClient;
 	private final ConversationService conversationService;
 
-	public LegalAIService(ChatModel chatModel, CitaTools citaTools,
-			ConversationService conversationService) {
+	public LegalAIService(ChatModel chatModel, CitaTools citaTools, ConversationService conversationService) {
 		this.conversationService = conversationService;
 		this.chatClient = ChatClient.builder(chatModel)
 				.defaultSystem(SYSTEM_PROMPT)
-				.defaultTools(citaTools) // <-- ESTA LINEA ES LA CORRECCION: registra agendarCita
+				.defaultTools(citaTools) 
 				.build();
 	}
 
-	/**
-	 * Envia la consulta del usuario al modelo y devuelve la respuesta generada.
-	 * Nunca lanza excepcion: ante un fallo devuelve {@link #RESPUESTA_FALLBACK}.
-	 */
-	public String responder(String consulta) {
-		if (consulta == null || consulta.isBlank()) {
-			return "Cuentame tu duda legal y con gusto te oriento.";
-		}
+	// En LegalAIService.java
 
-		try {
-			String respuesta = this.chatClient.prompt()
-					.user(consulta)
-					.call()
-					.content();
+		public String responder(String consulta, String telefono) {
+			if (consulta == null || consulta.isBlank()) {
+				return "Cuéntame tu duda legal y con gusto te oriento.";
+			}
+			try {
+				String respuesta = this.chatClient.prompt()
+						.user(consulta)
+						.toolContext(java.util.Map.of("telefono", telefono)) // <-- AÑADIR ESTO
+						.call()
+						.content();
 
-			if (respuesta == null || respuesta.isBlank()) {
-				log.warn("El modelo devolvio una respuesta vacia para la consulta recibida.");
+				if (respuesta == null || respuesta.isBlank()) {
+					return RESPUESTA_FALLBACK;
+				}
+				return respuesta.trim();
+			} catch (Exception ex) {
+				log.error("Error al consultar el modelo de IA: {}", ex.getMessage(), ex);
 				return RESPUESTA_FALLBACK;
 			}
-			return respuesta.trim();
-		}
-		catch (Exception ex) {
-			log.error("Error al consultar el modelo de IA: {}", ex.getMessage(), ex);
-			return RESPUESTA_FALLBACK;
-		}
-	}
-
-	/**
-	 * Firma principal, la que usa el handler de WhatsApp: responde teniendo en cuenta los
-	 * ultimos mensajes de la conversacion.
-	 */
-	public String responder(Conversacion conversacion, String texto) {
-		if (texto == null || texto.isBlank()) {
-			return "Cuentame tu duda legal y con gusto te oriento.";
 		}
 
-		List<Message> historial = historialDe(conversacion);
-		if (historial.isEmpty()) {
-			// Sin contexto previo: es exactamente la consulta suelta de responder(String).
-			return responder(texto);
-		}
+		// Agregamos el parámetro String telefono
+		public String responder(Conversacion conversacion, String texto, String telefono) {
+			if (texto == null || texto.isBlank()) {
+				return "Cuéntame tu duda legal y con gusto te oriento.";
+			}
 
-		try {
-			String respuesta = this.chatClient.prompt()
-					.messages(historial)
-					.user(texto)
-					.call()
-					.content();
+			// ELIMINA ESTA LÍNEA:
+			// String telefono = conversacion.getCliente().getTelefono();
 
-			if (respuesta == null || respuesta.isBlank()) {
-				log.warn("El modelo devolvio una respuesta vacia para la conversacion {}.",
-						conversacion != null ? conversacion.getId() : null);
+			List<Message> historial = historialDe(conversacion);
+			
+			if (historial.isEmpty()) {
+				return responder(texto, telefono);
+			}
+
+			try {
+				String respuesta = this.chatClient.prompt()
+						.messages(historial)
+						.user(texto)
+						.toolContext(java.util.Map.of("telefono", telefono)) 
+						.call()
+						.content();
+
+				if (respuesta == null || respuesta.isBlank()) {
+					return RESPUESTA_FALLBACK;
+				}
+				return respuesta.trim();
+			} catch (Exception ex) {
+				log.error("Error al consultar el modelo de IA con historial: {}", ex.getMessage(), ex);
 				return RESPUESTA_FALLBACK;
 			}
-			return respuesta.trim();
 		}
-		catch (Exception ex) {
-			log.error("Error al consultar el modelo de IA con historial: {}", ex.getMessage(), ex);
-			return RESPUESTA_FALLBACK;
-		}
-	}
 
-	/**
-	 * Version para cuando el tema viene del menu numerado y no hay una pregunta escrita
-	 * por el cliente. Se convierte la etiqueta de la opcion en una consulta normal.
-	 */
-	public String responderPorTema(String tema) {
-		if (tema == null || tema.isBlank()) {
-			return RESPUESTA_FALLBACK;
+//	public String responderPorTema(String tema) {
+//		if (tema == null || tema.isBlank()) {
+//			return RESPUESTA_FALLBACK;
+//		}
+//		return responder("El cliente eligió del menú la opción: \"" + tema
+//				+ "\". Explícale ese punto de forma breve y concreta.");
+//	}
+		public String responderPorTema(String tema, String telefono) { // <-- Agregamos el teléfono
+			if (tema == null || tema.isBlank()) {
+				return RESPUESTA_FALLBACK;
+			}
+			return responder("El cliente eligió del menú la opción: \"" + tema
+					+ "\". Explícale ese punto de forma breve y concreta.", telefono); // <-- Pasamos el teléfono
 		}
-		return responder("El cliente eligio del menu la opcion: \"" + tema
-				+ "\". Explicale ese punto de forma breve y concreta.");
-	}
 
-	/**
-	 * Traduce los mensajes guardados en BD a mensajes de Spring AI. Si la lectura falla
-	 * (BD caida, por ejemplo) se devuelve lista vacia: preferimos contestar sin memoria
-	 * antes que no contestar.
-	 */
 	private List<Message> historialDe(Conversacion conversacion) {
 		if (conversacion == null || conversacion.getId() == null) {
 			return List.of();
 		}
 		try {
+			// CORRECCIÓN AQUÍ: Diferenciar User de Assistant
 			return this.conversationService.obtenerHistorialReciente(conversacion).stream()
 					.filter(m -> m.getContenido() != null && !m.getContenido().isBlank())
 					.<Message>map(m -> "assistant".equalsIgnoreCase(m.getRol())
 							? new AssistantMessage(m.getContenido())
 							: new UserMessage(m.getContenido()))
 					.toList();
-		}
-		catch (Exception ex) {
-			log.warn("No se pudo leer el historial de la conversacion {}: {}",
-					conversacion.getId(), ex.getMessage());
+		} catch (Exception ex) {
+			log.warn("No se pudo leer el historial de la conversación {}: {}", conversacion.getId(), ex.getMessage());
 			return List.of();
 		}
 	}

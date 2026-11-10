@@ -17,11 +17,11 @@
     "Fe de hechos",
     "Trámites administrativos locales"
   ],
-  "menu_opciones": [
+    "menu_opciones": [
     {"opcion": "1", "texto": "Consultar costos de diligencias"},
     {"opcion": "2", "texto": "Consultar los servicios que realizamos"},
     {"opcion": "3", "texto": "Horarios de atención"},
-    {"opcion": "4", "texto": "Agendar una cita por Zoom o Whatsapp"}
+    {"opcion": "4", "texto": "*Agendar una cita por Zoom*"}
   ],
   "numero_de_nuestros_abogados":[
      {"Martha Evelia":"5214491157917"}
