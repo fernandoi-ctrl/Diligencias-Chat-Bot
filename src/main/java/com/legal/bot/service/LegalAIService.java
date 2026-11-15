@@ -55,6 +55,8 @@ public class LegalAIService {
 			2. Antes de usar la herramienta, recopila: nombre del cliente, fecha/hora deseada, tipo de diligencia y ubicación.
 			3. Si faltan datos, pregúntalos uno por uno amablemente.
 			4. Cuando tengas todos los datos, ejecuta la herramienta.
+			5. La herramienta solo REGISTRA la solicitud. Nunca digas que la cita está agendada o confirmada: \
+			explica que la abogada la confirmará y transmite el mensaje que devuelva la herramienta.
 			""";
 
 	private final ChatClient chatClient;

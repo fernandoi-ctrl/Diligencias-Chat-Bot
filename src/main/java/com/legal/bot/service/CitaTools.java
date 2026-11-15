@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,13 +16,20 @@ public class CitaTools {
     private static final Logger log = LoggerFactory.getLogger(CitaTools.class);
     private final WhatsAppService whatsAppService;
     private final CitaRepository citaRepository;
+    // Pagina publica de Google Calendar Appointment Schedules. Vacia = no se comparte enlace.
+    private final String bookingUrl;
 
-    public CitaTools(WhatsAppService whatsAppService, CitaRepository citaRepository) {
+    public CitaTools(WhatsAppService whatsAppService, CitaRepository citaRepository,
+                     @Value("${booking.url:}") String bookingUrl) {
         this.whatsAppService = whatsAppService;
         this.citaRepository = citaRepository;
+        this.bookingUrl = bookingUrl;
     }
 
-    @Tool(description = "Agenda una cita por Zoom. Requiere nombre, fecha/hora, tipo de diligencia y ubicación.")
+    // La cita NO queda confirmada aqui: solo se registra la solicitud. La abogada la
+    // confirma despues; el bot nunca debe decirle al cliente que ya esta agendada.
+    @Tool(description = "Registra una solicitud de cita por Zoom para que la abogada la confirme despues. "
+            + "NO confirma la cita. Requiere nombre, fecha/hora, tipo de diligencia y ubicación.")
     public String agendarCita(
             @ToolParam(description = "Nombre completo del cliente") String nombre,
             @ToolParam(description = "Fecha y hora exacta (ej. 31 de octubre a las 4pm)") String fechaHora,
@@ -72,6 +80,15 @@ public class CitaTools {
             log.error("Fallo al enviar notificación por WhatsApp: {}", e.getMessage());
         }
         
-        return "La cita ha sido agendada con éxito en el sistema para el día " + fechaHora + " por Zoom.";
+        return mensajeParaCliente(fechaHora);
+    }
+
+    String mensajeParaCliente(String fechaHora) {
+        String mensaje = "Solicitud recibida para el " + fechaHora + ". La cita aún NO está confirmada: "
+                + "la abogada revisará tu solicitud y te contactará para confirmar fecha, hora y costo.";
+        if (bookingUrl != null && !bookingUrl.isBlank()) {
+            mensaje += " Si lo prefieres, puedes reservar directamente una llamada de 15 minutos aquí: " + bookingUrl;
+        }
+        return mensaje;
     }
 }

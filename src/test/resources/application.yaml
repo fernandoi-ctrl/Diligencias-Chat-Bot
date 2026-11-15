@@ -15,6 +15,9 @@ spring:
       ddl-auto: create-drop
     # Hibernate detecta el dialecto de H2 solo; declararlo dispara un warning.
     open-in-view: false
+  # Las migraciones son SQL de PostgreSQL; se prueban aparte en MigracionesPostgresTest.
+  flyway:
+    enabled: false
   ai:
     openai:
       base-url: http://localhost:11434/v1

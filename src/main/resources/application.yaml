@@ -20,20 +20,35 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  # Supabase ya tiene las tablas de V1/V2 creadas a mano y no tiene historial de
+  # Flyway: el primer arranque marca V2 como baseline y solo aplica V3 en adelante.
+  # En una BD vacia no hay baseline y corren todas las migraciones.
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 2
   ai:
     openai:
       base-url: https://api.groq.com/openai/v1
       api-key: ${GROQ_API_KEY}
       chat:
         options:
-          model: qwen/qwen3.8-27b # <-- CAMBIA ESTO (o usa llama-3.3-70b-versatile si está disponible)
+          model: openai/gpt-oss-120b # <-- CAMBIA ESTO (o usa llama-3.3-70b-versatile si está disponible)
           temperature: 0.3
+          max-tokens: 500
 
 whatsapp:
   access-token: ${WHATSAPP_ACCESS_TOKEN}
   phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID}
   verify-token: ${WHATSAPP_VERIFY_TOKEN}
   api-url: https://graph.facebook.com/v21.0
+
+# Origenes que pueden llamar a la API publica /api/v1 (la landing), separados por coma.
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+
+# Enlace publico de Google Calendar Appointment Schedules (opcional).
+booking:
+  url: ${GOOGLE_BOOKING_URL:}
 
 chat:
   conversacion:
