@@ -14,4 +14,4 @@ RUN mkdir -p /app/certs
 # El certificado debe estar en src/main/resources para ser copiado
 COPY src/main/resources/prod-ca-2021.crt /app/certs/prod-ca-2021.crt
 
-ENTRYPOINT ["java", "-Djdk.tls.client.protocols=TLSv1.2", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Djdk.tls.client.protocols=TLSv1.3", "-jar", "app.jar"]

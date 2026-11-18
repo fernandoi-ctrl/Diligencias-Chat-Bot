@@ -16,6 +16,10 @@ spring:
         sslcert: ""
         sslkey: ""
         sslrootcert: ""
+  flyway:
+     jdbc-properties:
+       useSSL: "true"
+       requireSSL: "true"
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,9 +27,6 @@ spring:
   # Supabase ya tiene las tablas de V1/V2 creadas a mano y no tiene historial de
   # Flyway: el primer arranque marca V2 como baseline y solo aplica V3 en adelante.
   # En una BD vacia no hay baseline y corren todas las migraciones.
-  flyway:
-    baseline-on-migrate: true
-    baseline-version: 2
   ai:
     openai:
       base-url: https://api.groq.com/openai/v1
