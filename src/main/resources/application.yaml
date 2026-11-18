@@ -17,6 +17,7 @@ spring:
         sslkey: ""
         sslrootcert: ""
   flyway:
+     enabled: false
      jdbc-properties:
        useSSL: "true"
        requireSSL: "true"
