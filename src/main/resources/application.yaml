@@ -2,21 +2,21 @@ server:
   port: ${PORT:8080}
 
 spring:
-  application:
+   sql:
+     init:
+       mode: never # Evita que Spring intente correr scripts al inicio
+   application:
     name: legal-whatsapp-bot
-  datasource:
+   datasource:
     url: ${SUPABASE_DB_URL}
     driver-class-name: org.postgresql.Driver
-  flyway:
+   flyway:
      enabled: false
-  jpa:
+   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
-  # Supabase ya tiene las tablas de V1/V2 creadas a mano y no tiene historial de
-  # Flyway: el primer arranque marca V2 como baseline y solo aplica V3 en adelante.
-  # En una BD vacia no hay baseline y corren todas las migraciones.
-  ai:
+   ai:
     openai:
       base-url: https://api.groq.com/openai/v1
       api-key: ${GROQ_API_KEY}
