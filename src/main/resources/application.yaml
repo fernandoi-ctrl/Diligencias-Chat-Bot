@@ -13,7 +13,7 @@ spring:
      enabled: false
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
   # Supabase ya tiene las tablas de V1/V2 creadas a mano y no tiene historial de
   # Flyway: el primer arranque marca V2 como baseline y solo aplica V3 en adelante.
