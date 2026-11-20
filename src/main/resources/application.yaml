@@ -11,9 +11,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   flyway:
      enabled: false
-     jdbc-properties:
-       useSSL: "true"
-       requireSSL: "true"
   jpa:
     hibernate:
       ddl-auto: validate
