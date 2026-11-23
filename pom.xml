@@ -54,11 +54,6 @@
     <artifactId>postgresql</artifactId>
     <version>42.7.14</version>
 </dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 
 		<!-- Migraciones versionadas (src/main/resources/db/migration). En una BD que ya
 		     tiene tablas y no tiene historial de Flyway (Supabase hoy) se hace baseline
